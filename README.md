@@ -32,7 +32,7 @@ The pMaximizer dashboard provides a consolidated view across all your Performanc
 The custom `asset_performance.sql` extraction query and modified `08-assetsummary.sql` transformation enable a full **Assets Performance Breakdown** page in Looker Studio — including a per-asset metrics table, asset type distribution chart, and daily cost/conversions/CPA time-series:
 
 <p align="center">
-  <img src="docs/images/assets-performance-breakdown.png?v=2" alt="Assets Performance Breakdown — table, donut chart, and time-series" width="90%">
+  <img src="https://raw.githubusercontent.com/Ninety2UA/pmax-performance-pack/main/docs/images/assets-performance-breakdown.png" alt="Assets Performance Breakdown — table, donut chart, and time-series" width="90%">
 </p>
 
 ---
