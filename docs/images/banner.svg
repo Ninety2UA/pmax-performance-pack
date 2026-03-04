@@ -23,13 +23,10 @@
     <filter id="iconGlow">
       <feDropShadow dx="0" dy="0" stdDeviation="6" flood-opacity="0.4"/>
     </filter>
-    <filter id="softGlow">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    <!-- Arrow marker -->
+    <marker id="arrowHead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="rgba(255,255,255,0.5)"/>
+    </marker>
   </defs>
 
   <!-- Background -->
@@ -75,88 +72,82 @@
     <line x1="100" y1="30" x2="80" y2="50" stroke="white" stroke-width="1"/>
   </g>
 
-  <!-- ═══════ MAIN TITLE ═══════ -->
+  <!-- MAIN TITLE -->
   <text x="600" y="85" text-anchor="middle" fill="white" font-size="54" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="700" filter="url(#shadow)">pMax Performance Pack</text>
 
   <!-- Subtitle -->
   <text x="600" y="125" text-anchor="middle" fill="#94A8CC" font-size="20" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="400">Google Performance Max Best Practices Dashboard</text>
 
-  <!-- ═══════ PIPELINE DIAGRAM (centered, prominent) ═══════ -->
+  <!-- PIPELINE DIAGRAM — 4 steps centered, clock separate -->
+  <!-- Pipeline center: x=600, y=200. Steps at -225, -75, 75, 225 (150px spacing) -->
   <g transform="translate(600, 200)">
-    <!-- Pipeline container pill -->
-    <rect x="-370" y="-38" width="740" height="76" rx="38" fill="url(#pipelineBg)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+    <!-- Pipeline container pill (covers 4 main steps) -->
+    <rect x="-268" y="-36" width="536" height="72" rx="36" fill="url(#pipelineBg)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
 
-    <!-- Step 1: Google Ads -->
-    <g transform="translate(-290, 0)">
-      <rect x="-30" y="-26" width="60" height="52" rx="14" fill="#4285F4" filter="url(#iconGlow)" style="flood-color:#4285F4"/>
+    <!-- Step 1: Google Ads API (center at -225) -->
+    <g transform="translate(-225, 0)">
+      <rect x="-26" y="-24" width="52" height="48" rx="12" fill="#4285F4" filter="url(#iconGlow)" style="flood-color:#4285F4"/>
       <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="white" font-size="22" font-family="'Google Sans', Arial, sans-serif" font-weight="700">G</text>
       <text x="0" y="48" text-anchor="middle" fill="#6B8CC7" font-size="10" font-family="Arial, sans-serif" font-weight="500">Ads API</text>
     </g>
 
-    <!-- Arrow 1 -->
-    <g transform="translate(-210, 0)" opacity="0.6">
-      <line x1="0" y1="0" x2="45" y2="0" stroke="white" stroke-width="2" stroke-dasharray="4,4"/>
-      <polygon points="45,-5 55,0 45,5" fill="white" opacity="0.8"/>
-    </g>
+    <!-- Arrow 1→2 -->
+    <line x1="-199" y1="0" x2="-101" y2="0" stroke="rgba(255,255,255,0.35)" stroke-width="2" marker-end="url(#arrowHead)"/>
 
-    <!-- Step 2: Cloud Functions / GAARF -->
-    <g transform="translate(-130, 0)">
-      <rect x="-30" y="-26" width="60" height="52" rx="14" fill="#34A853" filter="url(#iconGlow)" style="flood-color:#34A853"/>
-      <text x="0" y="-2" text-anchor="middle" dominant-baseline="central" fill="white" font-size="18" font-family="'Google Sans', Arial, sans-serif" font-weight="700">fn</text>
+    <!-- Step 2: Cloud Functions / GAARF (center at -75) -->
+    <g transform="translate(-75, 0)">
+      <rect x="-26" y="-24" width="52" height="48" rx="12" fill="#34A853" filter="url(#iconGlow)" style="flood-color:#34A853"/>
+      <text x="0" y="0" text-anchor="middle" dominant-baseline="central" fill="white" font-size="18" font-family="'Google Sans', Arial, sans-serif" font-weight="700">fn</text>
       <text x="0" y="48" text-anchor="middle" fill="#5DA06E" font-size="10" font-family="Arial, sans-serif" font-weight="500">GAARF</text>
     </g>
 
-    <!-- Arrow 2 -->
-    <g transform="translate(-50, 0)" opacity="0.6">
-      <line x1="0" y1="0" x2="45" y2="0" stroke="white" stroke-width="2" stroke-dasharray="4,4"/>
-      <polygon points="45,-5 55,0 45,5" fill="white" opacity="0.8"/>
-    </g>
+    <!-- Arrow 2→3 -->
+    <line x1="-49" y1="0" x2="49" y2="0" stroke="rgba(255,255,255,0.35)" stroke-width="2" marker-end="url(#arrowHead)"/>
 
-    <!-- Step 3: BigQuery -->
-    <g transform="translate(30, 0)">
-      <rect x="-30" y="-26" width="60" height="52" rx="14" fill="#F9AB00" filter="url(#iconGlow)" style="flood-color:#F9AB00"/>
+    <!-- Step 3: BigQuery (center at 75) -->
+    <g transform="translate(75, 0)">
+      <rect x="-26" y="-24" width="52" height="48" rx="12" fill="#F9AB00" filter="url(#iconGlow)" style="flood-color:#F9AB00"/>
       <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-family="'Google Sans', Arial, sans-serif" font-weight="700">BQ</text>
       <text x="0" y="48" text-anchor="middle" fill="#C49520" font-size="10" font-family="Arial, sans-serif" font-weight="500">BigQuery</text>
     </g>
 
-    <!-- Arrow 3 -->
-    <g transform="translate(110, 0)" opacity="0.6">
-      <line x1="0" y1="0" x2="45" y2="0" stroke="white" stroke-width="2" stroke-dasharray="4,4"/>
-      <polygon points="45,-5 55,0 45,5" fill="white" opacity="0.8"/>
-    </g>
+    <!-- Arrow 3→4 -->
+    <line x1="101" y1="0" x2="199" y2="0" stroke="rgba(255,255,255,0.35)" stroke-width="2" marker-end="url(#arrowHead)"/>
 
-    <!-- Step 4: Looker Studio -->
-    <g transform="translate(190, 0)">
-      <rect x="-30" y="-26" width="60" height="52" rx="14" fill="#EA4335" filter="url(#iconGlow)" style="flood-color:#EA4335"/>
+    <!-- Step 4: Looker Studio (center at 225) -->
+    <g transform="translate(225, 0)">
+      <rect x="-26" y="-24" width="52" height="48" rx="12" fill="#EA4335" filter="url(#iconGlow)" style="flood-color:#EA4335"/>
       <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="white" font-size="16" font-family="'Google Sans', Arial, sans-serif" font-weight="700">LS</text>
       <text x="0" y="48" text-anchor="middle" fill="#C4564B" font-size="10" font-family="Arial, sans-serif" font-weight="500">Dashboard</text>
     </g>
 
-    <!-- Step 5: Clock icon (scheduler) above the pipeline -->
-    <g transform="translate(290, 0)">
-      <circle cx="0" cy="0" r="22" fill="rgba(92, 107, 192, 0.3)" stroke="#7986CB" stroke-width="1"/>
-      <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="#9FA8DA" font-size="18">&#9201;</text>
-      <text x="0" y="48" text-anchor="middle" fill="#7986CB" font-size="10" font-family="Arial, sans-serif" font-weight="500">4 AM CET</text>
+    <!-- Scheduler clock — separate, to the right with a subtle connector -->
+    <line x1="258" y1="-12" x2="300" y2="-12" stroke="rgba(121,134,203,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+    <g transform="translate(330, -12)">
+      <circle cx="0" cy="0" r="20" fill="rgba(92, 107, 192, 0.2)" stroke="rgba(121,134,203,0.4)" stroke-width="1"/>
+      <text x="0" y="1" text-anchor="middle" dominant-baseline="central" fill="#9FA8DA" font-size="16">&#9201;</text>
+      <text x="0" y="32" text-anchor="middle" fill="#7986CB" font-size="10" font-family="Arial, sans-serif" font-weight="500">Daily 4 AM</text>
     </g>
   </g>
 
-  <!-- ═══════ FEATURE PILLS ═══════ -->
+  <!-- FEATURE PILLS — evenly spaced, centered -->
+  <!-- Total width: 3 pills. Center at 600. Pills at 290, 500, 710 -->
   <!-- Per-Asset Metrics -->
-  <rect x="233" y="278" width="210" height="36" rx="18" fill="rgba(66, 133, 244, 0.2)" stroke="rgba(66, 133, 244, 0.5)" stroke-width="1"/>
-  <circle cx="254" cy="296" r="5" fill="#4285F4"/>
-  <text x="270" y="301" fill="#93C5FD" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">Per-Asset Metrics</text>
+  <rect x="220" y="278" width="210" height="36" rx="18" fill="rgba(66, 133, 244, 0.2)" stroke="rgba(66, 133, 244, 0.5)" stroke-width="1"/>
+  <circle cx="241" cy="296" r="5" fill="#4285F4"/>
+  <text x="257" y="301" fill="#93C5FD" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">Per-Asset Metrics</text>
 
   <!-- API v23+ Ready -->
-  <rect x="468" y="278" width="160" height="36" rx="18" fill="rgba(52, 168, 83, 0.2)" stroke="rgba(52, 168, 83, 0.5)" stroke-width="1"/>
-  <circle cx="489" cy="296" r="5" fill="#34A853"/>
-  <text x="504" y="301" fill="#86EFAC" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">API v23+ Ready</text>
+  <rect x="460" y="278" width="175" height="36" rx="18" fill="rgba(52, 168, 83, 0.2)" stroke="rgba(52, 168, 83, 0.5)" stroke-width="1"/>
+  <circle cx="481" cy="296" r="5" fill="#34A853"/>
+  <text x="497" y="301" fill="#86EFAC" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">API v23+ Ready</text>
 
   <!-- Automated Pipeline -->
-  <rect x="653" y="278" width="210" height="36" rx="18" fill="rgba(251, 188, 5, 0.2)" stroke="rgba(251, 188, 5, 0.5)" stroke-width="1"/>
-  <circle cx="674" cy="296" r="5" fill="#FBBC05"/>
-  <text x="690" y="301" fill="#FDE68A" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">Automated Pipeline</text>
+  <rect x="665" y="278" width="210" height="36" rx="18" fill="rgba(251, 188, 5, 0.2)" stroke="rgba(251, 188, 5, 0.5)" stroke-width="1"/>
+  <circle cx="686" cy="296" r="5" fill="#FBBC05"/>
+  <text x="702" y="301" fill="#FDE68A" font-size="14" font-family="'Google Sans', 'Segoe UI', Arial, sans-serif" font-weight="500">Automated Pipeline</text>
 
-  <!-- ═══════ TECH STACK ═══════ -->
+  <!-- TECH STACK -->
   <text x="600" y="358" text-anchor="middle" fill="#5E6F8E" font-size="13" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace" font-weight="400">Google Ads API  ·  GAARF  ·  Cloud Functions  ·  Cloud Workflows  ·  BigQuery  ·  Looker Studio</text>
 
   <!-- Bottom tagline -->
