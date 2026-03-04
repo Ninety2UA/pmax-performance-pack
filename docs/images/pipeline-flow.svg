@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 500" width="1100" height="500">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.1"/>
+    </filter>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fafafa"/>
+      <stop offset="100%" style="stop-color:#f0f0f0"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#5f6368"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4285F4"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="500" fill="url(#bgGrad)" rx="12"/>
+
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" fill="#1a237e" font-size="20" font-family="'Google Sans', Arial, sans-serif" font-weight="700">Data Pipeline — Query Execution Flow</text>
+
+  <!-- ═══════════════ LEFT COLUMN: Ads Queries ═══════════════ -->
+  <text x="195" y="65" text-anchor="middle" fill="#4285F4" font-size="14" font-family="Arial, sans-serif" font-weight="700">GAQL Extraction Queries (19)</text>
+  <text x="195" y="82" text-anchor="middle" fill="#9E9E9E" font-size="11" font-family="Arial, sans-serif">ads-queries/ → pmax_ads dataset</text>
+
+  <!-- Query list - upstream queries -->
+  <g font-family="'SF Mono', 'Fira Code', monospace" font-size="11">
+    <rect x="40" y="95" width="310" height="22" rx="4" fill="#E3F2FD" filter="url(#shadow)"/>
+    <text x="50" y="110" fill="#1565C0">campaign_settings.sql</text>
+    <rect x="275" y="98" width="65" height="16" rx="8" fill="#FFF3E0" stroke="#FF9800" stroke-width="0.5"/>
+    <text x="307" y="110" text-anchor="middle" fill="#E65100" font-size="8" font-family="Arial" font-weight="600">PATCHED</text>
+
+    <rect x="40" y="120" width="310" height="22" rx="4" fill="#E3F2FD" filter="url(#shadow)"/>
+    <text x="50" y="135" fill="#1565C0">assetgroupasset.sql</text>
+    <rect x="275" y="123" width="65" height="16" rx="8" fill="#FFF3E0" stroke="#FF9800" stroke-width="0.5"/>
+    <text x="307" y="135" text-anchor="middle" fill="#E65100" font-size="8" font-family="Arial" font-weight="600">PATCHED</text>
+
+    <rect x="40" y="145" width="310" height="22" rx="4" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="50" y="160" fill="#1B5E20" font-weight="bold">asset_performance.sql</text>
+    <rect x="275" y="148" width="65" height="16" rx="8" fill="#C8E6C9" stroke="#4CAF50" stroke-width="0.5"/>
+    <text x="307" y="160" text-anchor="middle" fill="#1B5E20" font-size="8" font-family="Arial" font-weight="700">CUSTOM</text>
+
+    <rect x="40" y="170" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="185" fill="#616161">assetgroupsignal.sql</text>
+
+    <rect x="40" y="195" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="210" fill="#616161">assetgroupsummary.sql</text>
+
+    <rect x="40" y="220" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="235" fill="#616161">campaignasset.sql</text>
+
+    <rect x="40" y="245" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="260" fill="#616161">conversions.sql</text>
+
+    <rect x="40" y="270" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="285" fill="#616161">customer.sql</text>
+
+    <rect x="40" y="295" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="50" y="310" fill="#616161">recommendations.sql</text>
+
+    <rect x="40" y="320" width="310" height="22" rx="4" fill="#EEEEEE" filter="url(#shadow)"/>
+    <text x="50" y="335" fill="#9E9E9E">... + 10 more queries</text>
+  </g>
+
+  <!-- Arrow: Ads Queries -> BQ Transformations -->
+  <line x1="355" y1="220" x2="410" y2="220" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ═══════════════ CENTER: BigQuery Tables ═══════════════ -->
+  <rect x="415" y="88" width="240" height="270" rx="12" fill="#FFF8E1" stroke="#FFD54F" stroke-width="2" filter="url(#shadow)"/>
+  <text x="535" y="110" text-anchor="middle" fill="#F57F17" font-size="13" font-family="Arial, sans-serif" font-weight="700">pmax_ads (Raw)</text>
+
+  <g font-family="monospace" font-size="10" fill="#795548">
+    <text x="430" y="132">campaign_settings</text>
+    <text x="430" y="149">assetgroupasset</text>
+    <text x="430" y="166" fill="#1B5E20" font-weight="bold">asset_performance ★</text>
+    <text x="430" y="183">assetgroupsignal</text>
+    <text x="430" y="200">assetgroupsummary</text>
+    <text x="430" y="217">campaignasset</text>
+    <text x="430" y="234">conversions</text>
+    <text x="430" y="251">customer</text>
+    <text x="430" y="268">customerasset</text>
+    <text x="430" y="285">ocid_mapping</text>
+    <text x="430" y="302">recommendations</text>
+    <text x="430" y="319">pmax_placement_view</text>
+    <text x="430" y="336" fill="#9E9E9E">... + 7 more tables</text>
+  </g>
+
+  <!-- Arrow: BQ Raw -> BQ Transformations -->
+  <line x1="660" y1="220" x2="715" y2="220" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="688" y="212" text-anchor="middle" fill="#9E9E9E" font-size="9" font-family="Arial">transform</text>
+
+  <!-- ═══════════════ RIGHT COLUMN: BQ Transformations ═══════════════ -->
+  <text x="870" y="65" text-anchor="middle" fill="#E65100" font-size="14" font-family="Arial, sans-serif" font-weight="700">BQ Transformations (16)</text>
+  <text x="870" y="82" text-anchor="middle" fill="#9E9E9E" font-size="11" font-family="Arial, sans-serif">bq-queries/ → pmax_ads_bq dataset</text>
+
+  <g font-family="'SF Mono', 'Fira Code', monospace" font-size="11">
+    <rect x="720" y="95" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="110" fill="#616161">01 image_assets</text>
+
+    <rect x="720" y="120" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="135" fill="#616161">02 primary_conversion_pmax</text>
+
+    <rect x="720" y="145" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="160" fill="#616161">04 text_assets</text>
+
+    <rect x="720" y="170" width="310" height="22" rx="4" fill="#FFF3E0" stroke="#FF9800" stroke-width="1" filter="url(#shadow)"/>
+    <text x="730" y="185" fill="#E65100">06 assetssnapshots</text>
+    <rect x="955" y="173" width="65" height="16" rx="8" fill="#FFF3E0" stroke="#FF9800" stroke-width="0.5"/>
+    <text x="987" y="185" text-anchor="middle" fill="#E65100" font-size="8" font-family="Arial" font-weight="600">PATCHED</text>
+
+    <rect x="720" y="195" width="310" height="22" rx="4" fill="#FFF3E0" stroke="#FF9800" stroke-width="1" filter="url(#shadow)"/>
+    <text x="730" y="210" fill="#E65100">07 campaign_data</text>
+    <rect x="955" y="198" width="65" height="16" rx="8" fill="#FFF3E0" stroke="#FF9800" stroke-width="0.5"/>
+    <text x="987" y="210" text-anchor="middle" fill="#E65100" font-size="8" font-family="Arial" font-weight="600">PATCHED</text>
+
+    <rect x="720" y="220" width="310" height="22" rx="4" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1.5" filter="url(#shadow)"/>
+    <text x="730" y="235" fill="#1B5E20" font-weight="bold">08 assetsummary + metrics</text>
+    <rect x="955" y="223" width="65" height="16" rx="8" fill="#C8E6C9" stroke="#4CAF50" stroke-width="0.5"/>
+    <text x="987" y="235" text-anchor="middle" fill="#1B5E20" font-size="8" font-family="Arial" font-weight="700">CUSTOM</text>
+
+    <rect x="720" y="245" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="260" fill="#616161">09 bpscore</text>
+
+    <rect x="720" y="270" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="285" fill="#616161">10 assetgroupbestpractices</text>
+
+    <rect x="720" y="295" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="310" fill="#616161">12 campaign_settings</text>
+
+    <rect x="720" y="320" width="310" height="22" rx="4" fill="#F5F5F5" filter="url(#shadow)"/>
+    <text x="730" y="335" fill="#616161">13 campaign_scores_union</text>
+
+    <rect x="720" y="345" width="310" height="22" rx="4" fill="#EEEEEE" filter="url(#shadow)"/>
+    <text x="730" y="360" fill="#9E9E9E">... + 5 more transformations</text>
+  </g>
+
+  <!-- ═══════════════ BOTTOM: Output Tables ═══════════════ -->
+  <rect x="420" y="400" width="290" height="80" rx="12" fill="#EA4335" filter="url(#shadow)"/>
+  <text x="565" y="425" text-anchor="middle" fill="white" font-size="14" font-family="Arial, sans-serif" font-weight="700">Looker Studio Dashboard</text>
+  <text x="565" y="445" text-anchor="middle" fill="#FFCDD2" font-size="11" font-family="Arial, sans-serif">9 data sources from pmax_ads_bq</text>
+  <text x="565" y="465" text-anchor="middle" fill="#EF9A9A" font-size="10" font-family="monospace">summaryassets · campaign_data · scores · ...</text>
+
+  <!-- Arrow: BQ Transformations -> Looker Studio -->
+  <line x1="870" y1="370" x2="870" y2="430" stroke="#EA4335" stroke-width="2"/>
+  <line x1="870" y1="430" x2="715" y2="430" stroke="#EA4335" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ═══════════════ LEGEND ═══════════════ -->
+  <rect x="40" y="380" width="300" height="100" rx="10" fill="white" stroke="#E0E0E0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="55" y="400" fill="#424242" font-size="12" font-family="Arial, sans-serif" font-weight="700">Legend</text>
+
+  <rect x="55" y="410" width="12" height="12" rx="3" fill="#E8F5E9" stroke="#4CAF50" stroke-width="1"/>
+  <text x="75" y="421" fill="#424242" font-size="11" font-family="Arial, sans-serif">Custom addition (this repo)</text>
+
+  <rect x="55" y="430" width="12" height="12" rx="3" fill="#FFF3E0" stroke="#FF9800" stroke-width="1"/>
+  <text x="75" y="441" fill="#424242" font-size="11" font-family="Arial, sans-serif">Patched for API v23+ compatibility</text>
+
+  <rect x="55" y="450" width="12" height="12" rx="3" fill="#F5F5F5" stroke="#E0E0E0" stroke-width="1"/>
+  <text x="75" y="461" fill="#424242" font-size="11" font-family="Arial, sans-serif">Upstream (unchanged)</text>
+</svg>

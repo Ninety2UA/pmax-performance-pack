@@ -1,8 +1,31 @@
-# pMax Performance Pack
+<p align="center">
+  <img src="docs/images/banner.svg" alt="pMax Performance Pack" width="100%">
+</p>
 
-A customized deployment of Google's [pMax Best Practices Dashboard](https://github.com/google/pmax_best_practices_dashboard) (pMaximizer) with **per-asset performance metrics** and compatibility fixes for **Google Ads API v23+**.
+<p align="center">
+  <strong>A customized deployment of Google's <a href="https://github.com/google/pmax_best_practices_dashboard">pMaximizer</a> with per-asset performance metrics and Google Ads API v23+ compatibility.</strong>
+</p>
 
-This repo contains the full set of GAQL extraction queries, BigQuery transformation queries, Cloud Workflow definitions, and configuration needed to run the pipeline on GCP.
+<p align="center">
+  <a href="#architecture"><img src="https://img.shields.io/badge/GCP-Cloud%20Functions%20v2-4285F4?style=flat-square&logo=google-cloud&logoColor=white" alt="GCP"></a>
+  <a href="#architecture"><img src="https://img.shields.io/badge/BigQuery-Data%20Pipeline-F9AB00?style=flat-square&logo=google-cloud&logoColor=white" alt="BigQuery"></a>
+  <a href="#looker-studio-dashboard"><img src="https://img.shields.io/badge/Looker%20Studio-Dashboard-EA4335?style=flat-square&logo=looker&logoColor=white" alt="Looker Studio"></a>
+  <a href="#google-ads-api-v23-compatibility-fixes"><img src="https://img.shields.io/badge/Google%20Ads%20API-v23+-34A853?style=flat-square&logo=google-ads&logoColor=white" alt="API v23+"></a>
+</p>
+
+---
+
+## Dashboard Preview
+
+The pMaximizer dashboard provides a consolidated view across all your Performance Max campaigns and accounts, with best practice scoring, asset performance tracking, and actionable optimization insights.
+
+<p align="center">
+  <img src="docs/images/dashboard-preview.png" alt="pMax Best Practices Dashboard Preview" width="90%">
+</p>
+
+> **What this repo adds**: Per-asset performance metrics (clicks, impressions, cost, conversions) broken down by ad network, plus Google Ads API v23+ compatibility patches.
+
+---
 
 ## What's Different from Upstream
 
@@ -27,27 +50,65 @@ Two fields deprecated in API v23 were removed from extraction queries and replac
 | `asset_group_asset.performance_label` | Removed from `assetgroupasset.sql` | `'LEARNING' AS asset_performance` in queries 06, 08 |
 | `campaign.url_expansion_opt_out` | Removed from `campaign_settings.sql` | `FALSE AS url_expansion_opt_out` in query 07 |
 
+---
+
 ## Architecture
 
-```
-Google Ads API (REST v23)
-    |
-    v
-GAARF Cloud Functions (Cloud Run / Cloud Functions v2)
-    |
-    v
-BigQuery (raw data: pmax_ads)
-    |
-    v
-BQ Transformations (dashboard tables: pmax_ads_bq)
-    |
-    v
-Looker Studio Dashboard
-```
+<p align="center">
+  <img src="docs/images/architecture.svg" alt="Pipeline Architecture Diagram" width="90%">
+</p>
 
-Orchestrated by **Cloud Workflows**, triggered daily by **Cloud Scheduler** (4 AM CET).
+### How It Works
+
+```mermaid
+flowchart LR
+    subgraph trigger["Daily Trigger"]
+        CS[/"Cloud Scheduler<br/>4 AM CET"/]
+    end
+
+    subgraph orchestration["Orchestration"]
+        WF["Cloud Workflows<br/>pmax-wf"]
+        WFA["pmax-wf-ads<br/>(sub-workflow)"]
+    end
+
+    subgraph extraction["Data Extraction"]
+        GC["pmax-getcids<br/>Account Discovery"]
+        CF["pmax<br/>GAARF Queries"]
+    end
+
+    subgraph storage["Data Storage & Transform"]
+        BQ_RAW[("BigQuery<br/>pmax_ads<br/><i>19 raw tables</i>")]
+        BQV["pmax-bq-view<br/>Wildcard Views"]
+        BQT["pmax-bq<br/>Transformations"]
+        BQ_DASH[("BigQuery<br/>pmax_ads_bq<br/><i>16 dashboard tables</i>")]
+    end
+
+    subgraph viz["Visualization"]
+        LS["Looker Studio<br/>Dashboard"]
+    end
+
+    CS --> WF
+    WF --> GC
+    GC --> WFA
+    WFA --> CF
+    CF --> BQ_RAW
+    BQ_RAW --> BQV
+    BQV --> BQT
+    BQT --> BQ_DASH
+    BQ_DASH --> LS
+
+    style trigger fill:#E8EAF6,stroke:#5C6BC0,color:#1a237e
+    style orchestration fill:#E3F2FD,stroke:#42A5F5,color:#0D47A1
+    style extraction fill:#E8F5E9,stroke:#66BB6A,color:#1B5E20
+    style storage fill:#FFF8E1,stroke:#FFD54F,color:#F57F17
+    style viz fill:#FFEBEE,stroke:#EF5350,color:#B71C1C
+```
 
 ### GCP Components
+
+<p align="center">
+  <img src="docs/images/arch-components.png" alt="GCP Components deployed by GAARF" width="60%">
+</p>
 
 | Service | Name | Purpose |
 |---|---|---|
@@ -63,14 +124,80 @@ Orchestrated by **Cloud Workflows**, triggered daily by **Cloud Scheduler** (4 A
 
 All four Cloud Functions share the same source from the [`google-ads-api-report-fetcher`](https://www.npmjs.com/package/google-ads-api-report-fetcher) (GAARF) npm package, differentiated by entry point.
 
+---
+
+## Data Pipeline
+
+<p align="center">
+  <img src="docs/images/pipeline-flow.svg" alt="Data Pipeline — Query Execution Flow" width="95%">
+</p>
+
+### Query Execution Order
+
+BQ transformation queries **must** run in numeric order (01 through 20) as later queries depend on tables created by earlier ones. The Cloud Workflow handles this automatically.
+
+```mermaid
+flowchart TD
+    subgraph ads["Ads Extraction (19 GAQL Queries)"]
+        direction LR
+        A1["campaign_settings"] ~~~ A2["assetgroupasset"]
+        A3["asset_performance ★"] ~~~ A4["+ 16 more"]
+    end
+
+    subgraph raw["pmax_ads (Raw Tables)"]
+        direction LR
+        R1[("19 tables<br/>per account")] ~~~ R2[("Wildcard views<br/>table_*")]
+    end
+
+    subgraph bq["BQ Transformations (16 Queries)"]
+        direction TB
+        B01["01 image_assets"] --> B04["04 text_assets"]
+        B04 --> B06["06 assetssnapshots"]
+        B06 --> B07["07 campaign_data"]
+        B07 --> B08["08 assetsummary ★"]
+        B08 --> B09["09 bpscore"]
+        B09 --> B13["13 campaign_scores_union"]
+        B13 --> B20["20 placements_view"]
+    end
+
+    subgraph dash["pmax_ads_bq (Dashboard Tables)"]
+        direction LR
+        D1["summaryassets"] ~~~ D2["campaign_data"]
+        D3["campaign_scores_union"] ~~~ D4["+ 13 more"]
+    end
+
+    ads --> raw
+    raw --> bq
+    bq --> dash
+
+    style A3 fill:#C8E6C9,stroke:#4CAF50,color:#1B5E20,font-weight:bold
+    style B08 fill:#C8E6C9,stroke:#4CAF50,color:#1B5E20,font-weight:bold
+    style ads fill:#E3F2FD,stroke:#42A5F5
+    style raw fill:#FFF8E1,stroke:#FFD54F
+    style bq fill:#FFF3E0,stroke:#FF9800
+    style dash fill:#FFEBEE,stroke:#EF5350
+```
+
+> Items marked with **★** are custom additions in this repo.
+
+---
+
 ## Repository Structure
+
+### GCS Bucket Layout
+
+<p align="center">
+  <img src="docs/images/arch-daily-run.png" alt="GCS Bucket Structure" width="70%">
+</p>
+
+### Local File Structure
 
 ```
 pmax-performance-pack/
 |-- ads-queries/              # 19 GAQL queries for Google Ads data extraction
-|   |-- asset_performance.sql # NEW: per-asset metrics (custom addition)
-|   |-- assetgroupasset.sql   # PATCHED: removed performance_label
-|   |-- campaign_settings.sql # PATCHED: removed url_expansion_opt_out
+|   |-- asset_performance.sql #   NEW: per-asset metrics (custom addition)
+|   |-- assetgroupasset.sql   #   PATCHED: removed performance_label
+|   |-- campaign_settings.sql #   PATCHED: removed url_expansion_opt_out
 |   |-- ad_group_asset.sql
 |   |-- assetgroupsignal.sql
 |   |-- assetgroupsummary.sql
@@ -105,14 +232,17 @@ pmax-performance-pack/
 |   |-- 19-assetgroupperformance.sql
 |   `-- 20-placements_view.sql
 |-- workflows/                # Cloud Workflow definitions (YAML)
-|   |-- pmax-wf.yaml          # Main orchestrator
-|   `-- pmax-wf-ads.yaml      # Sub-workflow for ads queries
+|   |-- pmax-wf.yaml          #   Main orchestrator
+|   `-- pmax-wf-ads.yaml      #   Sub-workflow for ads queries
 |-- config/
 |   |-- get-accounts.sql            # GAQL query to discover pMax accounts
 |   |-- google-ads.yaml.example     # Credential template (fill in your own)
 |   `-- dashboard_url.txt           # Looker Studio clone URL
+|-- docs/images/              # Documentation assets
 `-- README.md
 ```
+
+---
 
 ## Deployment
 
@@ -129,9 +259,23 @@ The easiest way to deploy is using Google's Cloud Shell walkthrough:
 
 1. Open the [pMaximizer Cloud Shell walkthrough](https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/nicholasgower/pmax_best_practices_dashboard&page=shell&tutorial=walkthrough.md)
 2. Follow the guided steps to deploy all Cloud Functions, Workflows, and Scheduler
-3. After deployment, replace the queries in GCS with the ones from this repo (see below)
+3. After deployment, replace the queries in GCS with the ones from this repo:
+
+```bash
+# Clone this repo
+git clone https://github.com/Ninety2UA/pmax-performance-pack.git
+cd pmax-performance-pack
+
+# Upload patched + custom queries to your GCS bucket
+export BUCKET="your-gcp-project-id"
+gsutil -m cp ads-queries/*.sql "gs://${BUCKET}/pmax/ads-queries/"
+gsutil -m cp bq-queries/*.sql "gs://${BUCKET}/pmax/bq-queries/"
+```
 
 ### Option 2: Manual Deployment
+
+<details>
+<summary><strong>Click to expand full manual deployment steps</strong></summary>
 
 #### 1. Upload queries and config to GCS
 
@@ -249,7 +393,11 @@ gcloud workflows run pmax-wf --location=${REGION} --data='{
 }'
 ```
 
-### Looker Studio Dashboard
+</details>
+
+---
+
+## Looker Studio Dashboard
 
 After the pipeline populates BigQuery, clone the dashboard template:
 
@@ -271,6 +419,8 @@ The dashboard reads from these `pmax_ads_bq` tables:
 | `asset_group_performance` | `assetgroup_performance` |
 | `placements_view` | `placements_view` |
 
+---
+
 ## Useful Commands
 
 ```bash
@@ -291,26 +441,24 @@ gcloud scheduler jobs describe pmax-wf --location=${REGION}
 gcloud functions list --v2 --regions=${REGION}
 ```
 
-## Troubleshooting
+---
 
-### Common Issues
+## Troubleshooting
 
 | Issue | Cause | Fix |
 |---|---|---|
-| `PERMISSION_DENIED` on workflow HTTP calls | Workflows SA missing `serviceAccountTokenCreator` | See IAM setup step above |
+| `PERMISSION_DENIED` on workflow HTTP calls | Workflows SA missing `serviceAccountTokenCreator` | See [IAM setup](#4-set-up-iam) step above |
 | `pmax-getcids` stuck in DEPLOYING | Setup script used wrong entry point | Delete and redeploy with `--entry-point=main_getcids` |
 | `metrics.cost_micros` returns 0 | Querying MCC instead of client account | Ensure `get-accounts.sql` resolves to client accounts |
 | `INVALID_ARGUMENT` on ads queries | Deprecated API fields | Use the patched queries from this repo |
 | BQ query fails on query 08 | Missing `asset_performance` table | Ensure `asset_performance.sql` is in `ads-queries/` |
 | Looker Studio access error | Not in template readers group | Join `pmax-dashboard-template-readers` Google Group |
 
-### Query Execution Order
-
-BQ transformation queries **must** run in numeric order (01 through 20) as later queries depend on tables created by earlier ones. The Cloud Workflow handles this automatically.
+---
 
 ## Credits
 
-Based on [pMax Best Practices Dashboard](https://github.com/google/pmax_best_practices_dashboard) by Google. Uses [GAARF](https://github.com/google/ads-api-report-fetcher) (Google Ads API Report Fetcher) for data extraction.
+Based on [pMax Best Practices Dashboard](https://github.com/google/pmax_best_practices_dashboard) by Google. Uses [GAARF](https://github.com/google/ads-api-report-fetcher) (Google Ads API Report Fetcher) for data extraction. Dashboard screenshots courtesy of the upstream project.
 
 ## License
 
