@@ -28,6 +28,7 @@ SELECT
   COALESCE(AGA.image_url,CONCAT('https://www.youtube.com/watch?v=',AGA.video_id)) AS image_video,
   COALESCE(AGA.image_url,CONCAT('https://i.ytimg.com/vi/', CONCAT(AGA.video_id, '/hqdefault.jpg'))) AS image_video_url,
   OCID.ocid,
+  PARSE_DATE('%Y-%m-%d', AP.date) AS date,
   AP.network,
   COALESCE(AP.clicks, 0) AS clicks,
   COALESCE(AP.impressions, 0) AS impressions,
@@ -48,6 +49,7 @@ LEFT JOIN (
     asset_group_id,
     campaign_id,
     network,
+    date,
     SUM(clicks) AS clicks,
     SUM(impressions) AS impressions,
     SUM(cost) AS cost_micros,
@@ -56,8 +58,8 @@ LEFT JOIN (
     SUM(all_conversions) AS all_conversions,
     SUM(all_conversions_value) AS all_conversions_value
   FROM `{bq_dataset}.asset_performance`
-  GROUP BY asset_id, asset_group_id, campaign_id, network
+  GROUP BY asset_id, asset_group_id, campaign_id, network, date
     ) AS AP ON AGA.asset_id = AP.asset_id AND AGA.asset_group_id = AP.asset_group_id AND AGA.campaign_id = AP.campaign_id
 WHERE AGA.campaign_id
     IN (SELECT campaign_id FROM `{bq_dataset}.campaign_settings`)
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23);
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24);

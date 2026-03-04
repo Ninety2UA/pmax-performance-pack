@@ -23,7 +23,17 @@ The pMaximizer dashboard provides a consolidated view across all your Performanc
   <img src="docs/images/dashboard-preview.png" alt="pMax Best Practices Dashboard Preview" width="90%">
 </p>
 
-> **What this repo adds**: Per-asset performance metrics (clicks, impressions, cost, conversions) broken down by ad network, plus Google Ads API v23+ compatibility patches.
+> **What this repo adds**: Per-asset performance metrics (clicks, impressions, cost, conversions) with daily time-series and per-network breakdowns, plus Google Ads API v23+ compatibility patches.
+
+---
+
+## Assets Performance Breakdown
+
+The custom `asset_performance.sql` extraction query and modified `08-assetsummary.sql` transformation enable a full **Assets Performance Breakdown** page in Looker Studio — including a per-asset metrics table, asset type distribution chart, and daily cost/conversions/CPA time-series:
+
+<p align="center">
+  <img src="docs/images/assets-performance-breakdown.png" alt="Assets Performance Breakdown — table, donut chart, and time-series" width="90%">
+</p>
 
 ---
 
@@ -37,9 +47,10 @@ The upstream dashboard shows asset metadata but no per-asset performance data. T
 
 - **Metrics**: clicks, impressions, cost_micros, conversions, conversions_value, all_conversions, all_conversions_value
 - **Segmentation**: `segments.date` + `segments.ad_network_type` (SEARCH, CONTENT, YOUTUBE, DISCOVER, etc.)
+- **Daily time-series**: The `date` column (cast to `DATE`) enables line charts for tracking performance over time
 - **Output**: ~10,000+ rows per run (assets x days x networks)
 
-The BQ transformation (`08-assetsummary.sql`) aggregates these metrics and joins them into the `summaryassets` table, adding 9 new columns.
+The BQ transformation (`08-assetsummary.sql`) joins these metrics into the `summaryassets` table with daily granularity, adding 10 new columns (date + 9 metric columns). This powers the time-series charts and per-network breakdowns in the dashboard.
 
 ### Google Ads API v23+ Compatibility Fixes
 
