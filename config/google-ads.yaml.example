@@ -1,0 +1,9 @@
+# Google Ads API credentials template
+# Copy this file to google-ads.yaml and fill in your values
+# Upload to GCS: gsutil cp google-ads.yaml gs://<YOUR_BUCKET>/pmax/google-ads.yaml
+
+developer_token: "YOUR_DEVELOPER_TOKEN"
+client_id: "YOUR_CLIENT_ID.apps.googleusercontent.com"
+client_secret: "YOUR_CLIENT_SECRET"
+refresh_token: "YOUR_REFRESH_TOKEN"
+login_customer_id: "YOUR_MCC_ID"

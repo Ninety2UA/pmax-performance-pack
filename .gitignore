@@ -1,0 +1,12 @@
+# Credentials - NEVER commit these
+config/google-ads.yaml
+*.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.bak

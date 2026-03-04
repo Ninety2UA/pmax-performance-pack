@@ -1,0 +1,261 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - project: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
+          - scripts: ${args.scripts}
+          - accounts: ${args.accounts}
+          - root_cid: ${args.root_cid}
+          - function_name: ${default(map.get(args, "function_name"), "gaarf")}
+          - function_location: ${default(map.get(args, "function_location"), "us-central1")}
+          - ads_config_path: ${args.ads_config_path}
+          - api: ${map.get(args, "api")}
+          - api_version: ${default(map.get(args, "api_version"), "")}
+          - writer: ${default(map.get(args, "writer"), "bq")}
+          - bq_dataset: ${default(map.get(args, "bq_dataset"), "")}
+          - bq_dataset_location: ${default(map.get(args, "bq_dataset_location"), "")}
+          - macros: ${map.get(args, "macros")}
+          - writer_options: ${map.get(args, "writer_options")}
+          - output_path: ${default(map.get(args, "output_path"), "")}
+          - concurrency_limit: ${default(map.get(args, "concurrency_limit"), 20)}
+
+    # get CF 'gaarf' function's URL
+    - get_function:
+        call: http.get
+        args:
+          url: ${"https://cloudfunctions.googleapis.com/v2/projects/" + project + "/locations/" + function_location + "/functions/" + function_name}
+          auth:
+            type: OAuth2
+        result: function
+        # TODO: move to using CF adapter when it's ready (currently only v1 supported):
+        #call: googleapis.cloudfunctions.v2.projects.locations.functions.get
+        #args:
+        #  name: ${"projects/" + project + "/locations/" + function_location + "/functions/" + function_name}
+        #result: function
+    - initialize_functions_uris:
+        assign:
+          - gaarf_main_cf_uri: ${function.body.serviceConfig.uri}
+
+    - initialize:
+        assign:
+          - error_occurred: false
+          - error_message: ""
+    - iterate_over_scripts:
+        parallel:
+          shared: [scripts, accounts, error_occurred, error_message]
+          concurrency_limit: ${concurrency_limit}
+          for:
+            value: script_item
+            in: ${scripts}
+            steps:
+              - check_for_errors:
+                  switch:
+                    - condition: ${error_occurred}
+                      next: continue
+              - check_for_constant:
+                  switch:
+                    - condition: ${text.match_regex(script_item, "_constant")}
+                      next: execute_constant_script
+                  next: parallel_loop_over_accounts
+              # execute constant query for a single (first) account
+              - execute_constant_script:
+                  call: executeAdsQuery
+                  args:
+                    cf_uri: ${gaarf_main_cf_uri}
+                    script_path: ${script_item}
+                    account: ${accounts[0]}
+                    root_cid: ${root_cid}
+                    macros: ${macros}
+                    project: ${project}
+                    writer: ${writer}
+                    bq_dataset: ${bq_dataset}
+                    bq_dataset_location: ${bq_dataset_location}
+                    ads_config_path: ${ads_config_path}
+                    api: ${api}
+                    api_version: ${api_version}
+                    writer_options: ${writer_options}
+                    output_path: ${output_path}
+                    is_constant: true
+                  next: continue # continue loop over queries
+              # parallel nested loop over accounts
+              - parallel_loop_over_accounts:
+                  try:
+                    parallel:
+                      shared: [accounts, error_occurred, error_message]
+                      concurrency_limit: ${concurrency_limit}
+                      for:
+                        value: account
+                        in: ${accounts}
+                        steps:
+                          - check_for_errors_nested:
+                              switch:
+                                - condition: ${error_occurred}
+                                  next: continue
+                          - execute_script:
+                              try:
+                                call: executeAdsQuery
+                                args:
+                                  cf_uri: ${gaarf_main_cf_uri}
+                                  script_path: ${script_item}
+                                  account: ${account}
+                                  root_cid: ${root_cid}
+                                  macros: ${macros}
+                                  project: ${project}
+                                  writer: ${writer}
+                                  bq_dataset: ${bq_dataset}
+                                  bq_dataset_location: ${bq_dataset_location}
+                                  ads_config_path: ${ads_config_path}
+                                  api: ${api}
+                                  api_version: ${api_version}
+                                  writer_options: ${writer_options}
+                                  output_path: ${output_path}
+                              except:
+                                as: e
+                                steps:
+                                  - set_error_nested:
+                                      assign:
+                                        - error_occurred: true
+                                        - error_message: ${"Error in script " + script_item + " for account " + account + ":" + e.message}
+                                  - exit_loop:
+                                      next: continue
+                          - end_nested_loop:
+                              next: continue
+                  except:
+                    as: e
+                    steps:
+                      - set_error:
+                          assign:
+                            - error_occurred: true
+                            - error_message: ${e.message}
+                      - returnError:
+                          raise: ${error_message}
+
+    - final_error_check:
+        switch:
+          - condition: ${error_occurred}
+            next: handle_error
+        next: workflow_success
+
+    - handle_error:
+        steps:
+          - log_error:
+              call: sys.log
+              args:
+                text: ${error_message}
+                severity: ERROR
+          - fail:
+              raise: ${error_message}
+
+    - workflow_success:
+        return: "Workflow completed successfully"
+
+    - end_workflow:
+        return: null
+
+executeAdsQuery:
+  params:
+    [
+      cf_uri,
+      script_path,
+      account,
+      root_cid,
+      macros,
+      project,
+      writer,
+      bq_dataset,
+      bq_dataset_location,
+      ads_config_path,
+      api,
+      api_version,
+      writer_options,
+      output_path,
+      is_constant: false,
+    ]
+  steps:
+    - init_vars:
+        assign:
+          - started: ${sys.now()}
+    - call_gaarf_cf:
+        try:
+          call: http.post
+          args:
+            url: ${cf_uri}
+            timeout: 1800 # maximum allowed timeout in Workflows is 1800 (30min) despite the fact CF gen2 support 3600 (60min)
+            query:
+              script_path: ${script_path}
+              ads_config_path: ${ads_config_path}
+              api: ${api}
+              api_version: ${api_version}
+              bq_project_id: ${project}
+              writer: ${writer}
+              bq_dataset: ${bq_dataset}
+              bq_dataset_location: ${bq_dataset_location}
+              customer_id: ${account}
+              root_cid: ${root_cid}
+              output_path: ${output_path}
+            body:
+              macro: ${macros}
+              writer_options: ${writer_options}
+            auth:
+              type: OIDC
+          result: script_results
+        retry:
+          predicate: ${custom_retry_predicate}
+          max_retries: 3
+          backoff:
+            initial_delay: 2
+            max_delay: 60
+            multiplier: 2
+    - log_script_result:
+        call: sys.log
+        args:
+          data:
+            is_constant: ${is_constant}
+            query: ${script_path}
+            account: ${account}
+            rowCount: ${map.get(script_results.body, "" + account)}
+            started: ${time.format(started)}
+            elapsed: ${sys.now() - started}
+          severity: "INFO"
+
+custom_retry_predicate:
+  params: [e]
+  steps:
+    - log_call_gaarf_cf_failure:
+        call: sys.log
+        args:
+          data: ${e}
+          severity: "WARNING"
+    - normalize_fields:
+        assign:
+          - tags: ${default(map.get(e, "tags"), [])}
+          - code: ${default(map.get(e, "code"),0)}
+    - what_to_repeat:
+        switch:
+          # We'll repeat if it's a ConnectionError, TimeoutError or http statuses:
+          #   429 - Too Many Requests
+          #   502 - Bad Gateway
+          #   503 - Service Unavailable
+          #   504 - Gateway Timeout
+          # NOTE: sometime errors happen inside Workflow and there's no any code
+          # (i.e. "code" can be null, so DO NOT use operand ==,<,>,>=,<= without wrapping with `default`
+          - condition: ${"ConnectionFailedError" in tags or "ConnectionError" in tags or "TimeoutError" in tags or "SystemError" in tags or code == 429 or code == 502 or code == 503 or code == 504}
+            next: log_call_gaarf_cf_retry
+    - otherwise:
+        steps:
+          - log_call_gaarf_cf_terminate:
+              call: sys.log
+              args:
+                text: "Non repeatable error, breaking"
+                severity: "ERROR"
+          - return_false:
+              return: false
+    - log_call_gaarf_cf_retry:
+        call: sys.log
+        args:
+          text: "Retrying"
+          severity: "WARNING"
+    - return_true:
+        return: true
+
